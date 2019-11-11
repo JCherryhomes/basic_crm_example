@@ -351,6 +351,7 @@ namespace CRM_Example.Data
             await SeedApplicationUsers(serviceProvider, context);
 
             AssignRoles(context);
+            CreateClaims(context);
                 
             await context.SaveChangesAsync();
         }
@@ -436,6 +437,21 @@ namespace CRM_Example.Data
             if (shouldAddAdminRole)
             {
                 context.UserRoles.Add(new IdentityUserRole<string> { RoleId = adminRole.Id, UserId = applicationAdmin.Id });
+            }
+        }
+
+        private static void CreateClaims(ApplicationDbContext context)
+        {
+            var adminUser = context.Users.First(u => u.UserName == admin.UserName);
+
+            if (!context.UserClaims.Any(uc => uc.UserId == adminUser.Id && uc.ClaimType == "Admin"))
+            {
+                context.UserClaims.Add(new IdentityUserClaim<string>
+                {
+                    ClaimType = "Admin",
+                    ClaimValue = "true",
+                    UserId = adminUser.Id
+                });
             }
         }
     }
