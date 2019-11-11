@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
+import { faArrowAltCircleDown } from '@fortawesome/free-regular-svg-icons';
 
 export interface ICustomer {
   id: number;
@@ -22,8 +23,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   pageSize = 10;
   column = 'FirstName';
   filter = new BehaviorSubject<string>(null);
+  selectedCustomer$ = new BehaviorSubject<ICustomer>(null);
   filterForm: FormGroup;
   filterSubscription: Subscription;
+
+  downArrow = faArrowAltCircleDown;
 
   user$: Observable<IUser>;
   token$: Observable<string>;
@@ -60,10 +64,18 @@ export class AdminComponent implements OnInit, OnDestroy {
     ).subscribe();
   }
 
-  changePage(page: number) {
+  changePage(page: number): void {
     this.page = page;
     this.fetchCustomers(this.baseUrl);
-    console.log('PAGE', page);
+  }
+
+  sort(column: string): void {
+    this.column = column;
+    this.fetchCustomers(this.baseUrl);
+  }
+
+  select(customer: ICustomer): void {
+    this.selectedCustomer$.next(customer);
   }
 
   private fetchCustomers(baseUrl: string) {
