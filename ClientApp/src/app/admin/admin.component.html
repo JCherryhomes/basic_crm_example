@@ -1,18 +1,39 @@
+<ngb-toast
+  *ngFor="let toast of toastService.toasts"
+  [class]="toast.classname"
+  [header]="toast.header"
+  [autohide]="toast.autohide"
+  [delay]="toast.delay || 5000"
+  (hide)="toastService.remove(toast)"
+>
+  <ng-template [ngIf]="isTemplate(toast)" [ngIfElse]="text">
+    <ng-template [ngTemplateOutlet]="toast.textOrTpl"></ng-template>
+  </ng-template>
+
+  <ng-template #text>{{ toast.textOrTpl }}</ng-template>
+</ngb-toast>
+
 <div class="form-group" [formGroup]="filterForm">
-  <label for="">Filter Customers</label>
-  <input
-    type="text"
-    class="form-control"
-    aria-describedby="helpId"
-    placeholder=""
-    formControlName="filter"
-  />
-  <small id="helpId" class="form-text text-muted"
-    >filter matches full name</small
-  >
+  <div class="form-inline">
+    <input
+      type="text"
+      class="form-control flex-fill"
+      aria-describedby="helpId"
+      placeholder="Filter Customers"
+      formControlName="filter"
+    />
+
+    <button class="btn btn-success m-3 flex-fill" (click)="create()">
+      New Customer
+    </button>
+  </div>
 </div>
-<div class="d-flex flex-fill" *ngIf="customers$ | async as customers">
-  <table class="table table-striped w-50">
+
+<div
+  class="d-flex flex-row flex-sm-wrap flex-md-nowrap"
+  *ngIf="customers$ | async as customers"
+>
+  <table class="table table-striped flex-fill">
     <thead class="thead-inverse">
       <tr>
         <th class="clickable" (click)="sort('FirstName')">
@@ -60,28 +81,79 @@
         <td scope="row">{{ customer.firstName }}</td>
         <td>{{ customer.lastName }}</td>
         <td>
-          <button type="button" class="btn btn-sm btn-primary" (click)="select(customer)">Edit</button>
+          <button
+            type="button"
+            class="btn btn-sm btn-primary"
+            (click)="select(customer)"
+          >
+            Edit
+          </button>
         </td>
       </tr>
     </tbody>
   </table>
-  <div class="w-50 p-5">
-    <ng-container *ngIf="selectedCustomer$ | async as selectedCustomer; else noCustomerSelected">
-      <div class="card">
+  <div class="flex-fill px-2">
+    <ng-container
+      *ngIf="
+        selectedCustomer$ | async as selectedCustomer;
+        else noCustomerSelected
+      "
+    >
+      <div class="card flex-fill" [formGroup]="customerForm">
         <div class="card-header">
-          Edit Customer
+          {{ this.idControl.value === 0 ? "Create" : "Edit" }} Customer
         </div>
-        <div class="card-body">
-          {{ selectedCustomer.firstName }} {{ selectedCustomer.lastName }}
+        <div class="card-body flex-fill">
+          <div class="form-group">
+            <label for="">First Name</label>
+            <input
+              type="text"
+              class="form-control flex-fill"
+              aria-describedby="firstNameHelpId"
+              placeholder="First Name"
+              formControlName="firstName"
+            />
+            <small
+              id="firstNameHelpId"
+              class="form-text text-danger"
+              *ngIf="!firstNameControl.pristine && firstNameControl.errors"
+            >
+              <span *ngIf="firstNameControl && firstNameControl.errors.required"
+                >First name is required</span
+              >
+            </small>
+          </div>
+          <div class="form-group">
+            <label for="">Last Name</label>
+            <input
+              type="text"
+              class="form-control"
+              aria-describedby="lastNameHelpId"
+              placeholder="Last Name"
+              formControlName="lastName"
+            />
+            <small
+              id="lastNameHelpId"
+              class="form-text text-danger"
+              *ngIf="!lastNameControl.pristine && lastNameControl.errors"
+            >
+              <span *ngIf="lastNameControl && lastNameControl.errors.required"
+                >Last name is required</span
+              >
+            </small>
+          </div>
         </div>
         <div class="card-footer text-muted">
-          <button class="btn btn-success">Save</button>
+          <button class="btn btn-success" (click)="saveCustomer()" [disabled]="customerForm.pristine || customerForm.invalid">Save</button>
         </div>
       </div>
     </ng-container>
     <ng-template #noCustomerSelected>
       <div class="jumbotron">
-        <h5>Select 'Edit' to make updates to a customer.</h5>
+        <h5>Select 'New Customer' to create a new customer.</h5>
+      </div>
+      <div class="jumbotron">
+        <h5>Select 'Edit' on a customer to make updates to that customer.</h5>
       </div>
     </ng-template>
   </div>
