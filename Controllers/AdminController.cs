@@ -31,9 +31,61 @@ namespace CRM_Example.Controllers
 
             var statement = $"GetCustomers {filterText}, @page={page}, @pageCount={pageCount}, @column='{column}'";
 
-            var results = context.Customers.FromSqlRaw(statement);
+            return context.Customers.FromSqlRaw(statement);
+        }
 
-            return results.ToList();
+        [HttpPost, Route("customers"), Authorize(Policies.CREATE_CUSTOMER)]
+        public async Task<IActionResult> Post([FromBody]Customer customer)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    context.Customers.Add(customer);
+                    await context.SaveChangesAsync();
+
+                    return Ok(customer);
+                }
+                else
+                {
+                    return BadRequest(ModelState);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException().Message);
+            }
+        }
+
+        [HttpPut, Route("customers/{id:int}"), Authorize(Policies.UPDATE_CUSTOMERS)]
+        public async Task<IActionResult> Post([FromRoute]int id, [FromBody]Customer customer)
+        {
+            try
+            {
+                var existing = context.Customers.Find(id);
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                else if (id != customer.Id || existing == null)                
+                {
+                    return NotFound(customer);
+                }
+                else
+                {
+                    existing.FirstName = customer.FirstName;
+                    existing.LastName = customer.LastName;
+
+                    await context.SaveChangesAsync();
+
+                    return Ok(customer);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException().Message);
+            }
         }
 
         private static (string filter, string column, int page, int pageCount) SetDefaultsIfValuesNotProvided(string filter, string column, int page, int pageCount)
